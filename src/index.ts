@@ -26,6 +26,19 @@ const createStyleElement = (familyName, url) => {
     window.document.head.appendChild(newStyle);
 }
 
+const loadXML = async(url) => {
+     return new Promise((resolve, reject) => {
+        fetch(url)
+            .then(response => response.text())
+            .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+            .then(data => {
+                resolve(data)
+            })
+            .catch(err => {
+                reject(err)
+            })
+     });
+}
 
 const getWords = (text, locales) => {
      let words: string[] = [];
@@ -161,4 +174,47 @@ const drawAndSelectText = async() => {
     app.stage.addChild(bitmapText);
 }
 
-drawAndSelectText();
+const drawAndSelectInstalledText = async() => {
+    const app = new PIXI.Application({
+        backgroundColor: 0xffffff,
+        antialias: true,
+        autoStart: true,
+        width: 512,
+        height: 196,
+    });
+    document.body.appendChild((app as any).view);
+
+    const languages = Object.keys(LANGUAGES);
+    const languageCount = languages.length;
+    console.log('languageCount', languageCount);
+
+    // Change the index [0 - 4] to see the different languages
+    const {family: fontFamily, url: fontUrl, text, locales, bitmap} = LANGUAGES[languages[4]];
+    console.log('fontFamily', fontFamily, 'text', text, locales);
+
+    const words = getWords(text, locales);
+    await loadFont(fontFamily, fontUrl);
+
+    const data = await loadXML(bitmap.data) as XMLDocument;
+    const texture = PIXI.Texture.from(bitmap.texture);
+    const bitmapFont = PIXI.BitmapFont.install(data, [texture]);
+
+    const bitmapText = new PIXI.BitmapText(text, {
+        fontName: bitmapFont.font,
+        fontSize: 36,
+        align: 'left',
+    });
+    app.stage.addChild(bitmapText);
+
+    // add a div with the text to the body to confirm the font is loaded and working`
+    const textDiv = document.createElement('div');
+    textDiv.innerText = 'expected: ' + text;
+    textDiv.style.fontFamily = fontFamily;
+    textDiv.style.color = 'blue'
+    textDiv.style.position = 'absolute';
+    textDiv.style.top = '55px';
+    document.body.appendChild(textDiv);
+}
+
+// drawAndSelectText();
+drawAndSelectInstalledText();
