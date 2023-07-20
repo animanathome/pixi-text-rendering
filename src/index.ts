@@ -168,12 +168,18 @@ const drawAndSelectText = async() => {
     console.log('bitmapText', bitmapText);
 
     // NOTES:
-    // - on the object bounds are available
+    // - only object bounds are available
     const {x, y, height, width} = bitmapText.getLocalBounds();
 
     app.stage.addChild(bitmapText);
 }
 
+/**
+ * Draw text using BitmapFontText by installing the font atlas
+ *
+ * NOTES:
+ * - we didn't select any words here since we weren't able to easily do so.
+ */
 const drawAndSelectInstalledText = async() => {
     const app = new PIXI.Application({
         backgroundColor: 0xffffff,
@@ -192,9 +198,9 @@ const drawAndSelectInstalledText = async() => {
     const {family: fontFamily, url: fontUrl, text, locales, bitmap} = LANGUAGES[languages[4]];
     console.log('fontFamily', fontFamily, 'text', text, locales);
 
-    const words = getWords(text, locales);
     await loadFont(fontFamily, fontUrl);
 
+    // create bitmapFont
     const data = await loadXML(bitmap.data) as XMLDocument;
     const texture = PIXI.Texture.from(bitmap.texture);
     const bitmapFont = PIXI.BitmapFont.install(data, [texture]);
