@@ -80,8 +80,13 @@ const loadFont = async(familyName, fontUrl) => {
      });
 }
 
-const drawAndSelectRomanText = async() => {
-    console.log('drawAndSelectRomanText')
+/**
+ * Draw text using BitmapFontText by generating the font atlas on the fly
+ *
+ * NOTES:
+ * - we didn't select any words here since we weren't able to easily do so.
+ */
+const drawAndSelectText = async() => {
     const app = new PIXI.Application({
         backgroundColor: 0xffffff,
         antialias: true,
@@ -93,11 +98,9 @@ const drawAndSelectRomanText = async() => {
 
     const languages = Object.keys(LANGUAGES);
     const languageCount = languages.length;
-    const space = 10;
     console.log('languageCount', languageCount);
 
-    let yOffset = 0;
-
+    // Change the index [0 - 4] to see the different languages
     const {family: fontFamily, url: fontUrl, text, locales} = LANGUAGES[languages[0]];
     console.log('fontFamily', fontFamily, 'text', text, locales);
 
@@ -108,46 +111,54 @@ const drawAndSelectRomanText = async() => {
 
     // add a div with the text to the body to confirm the font is loaded and working`
     const textDiv = document.createElement('div');
-    textDiv.innerText = text;
+    textDiv.innerText = 'expected: ' + text;
     textDiv.style.fontFamily = fontFamily;
+    textDiv.style.color = 'blue'
+    textDiv.style.position = 'absolute';
+    textDiv.style.top = '55px';
     document.body.appendChild(textDiv);
 
     // add a div with the graphemes to the body to confirm we have the correct ones
     const graphDiv = document.createElement('div');
-    graphDiv.innerText = graphemes.join(' ');
+    graphDiv.innerText = 'expected: ' + graphemes.join(' ');
     graphDiv.style.fontFamily = fontFamily;
+    graphDiv.style.color = 'blue';
+    graphDiv.style.position = 'absolute';
+    graphDiv.style.top = '195px';
     document.body.appendChild(graphDiv);
-
-    const bitmapFontName = `${fontFamily}BitmapFont`;
 
     // NOTES:
     // - the bitmap font requires us the specify the characters or graphemes we want to use
     //   by default it will use the ASCII characters
     // - we can't add chars to the bitmap font after it has been created
     // - no kerning is available for bitmap fonts
+    const bitmapFontName = `${fontFamily}BitmapFont`;
     const bitmapFont = PIXI.BitmapFont.from(bitmapFontName,
         {fontFamily: fontFamily, fontSize: 36},
          {chars: graphemes}
     );
+    console.log('bitmapFont', bitmapFont);
 
     // show bitmap font texture so we can see which characters are available
     const bitmapFontSprite = new PIXI.Sprite(bitmapFont.pageTextures[0]);
     app.stage.addChild(bitmapFontSprite);
-    bitmapFontSprite.y = 60;
+    bitmapFontSprite.y = 80;
 
+    // NOTES:
+    // - doesn't support text direction
+    // - doesn't expose the used glyph ids (which means we can't calculate the different bounds)
     const bitmapText = new PIXI.BitmapText(text, {
         fontName: bitmapFontName,
         fontSize: 36,
         align: 'left',
     });
+    console.log('bitmapText', bitmapText);
 
     // NOTES:
     // - on the object bounds are available
     const {x, y, height, width} = bitmapText.getLocalBounds();
 
     app.stage.addChild(bitmapText);
-    bitmapText.y = yOffset;
-    yOffset += height + space;
-    console.log('yOffset', yOffset);
 }
-drawAndSelectRomanText();
+
+drawAndSelectText();
